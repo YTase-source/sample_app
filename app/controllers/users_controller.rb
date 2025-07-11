@@ -14,6 +14,7 @@ class UsersController < ApplicationController
     if @user.save
       # 保存の成功をここで扱う。
       # redirect_to @user
+      flash[:success] = "Welcome to the Sample App!"
       redirect_to user_url(@user)
     else
       render 'new', status: :unprocessable_entity
