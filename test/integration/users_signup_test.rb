@@ -14,5 +14,10 @@ class UsersSignupTest < ActionDispatch::IntegrationTest
     # HTTPステータスコード 422 (Unprocessable Entity) が帰ってくることを確認する
     assert_response :unprocessable_entity
     assert_template 'users/new'
+    assert_select '#user_name'
+    assert_select '#user_email'
+    assert_select '#user_password'
+    assert_select '#user_password_confirmation'
+    assert_select '.field_with_errors'
   end
 end
