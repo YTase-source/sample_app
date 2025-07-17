@@ -15,5 +15,14 @@ class SessionsController < ApplicationController
     end
   end
 
-  def destroy; end
+  # 現在のユーザーをログアウトする
+  def log_out
+    reset_session
+    @current_user = nil # 安全のため
+  end
+
+  def destroy
+    log_out
+    redirect_to root_url, status: :see_other # HTTP303ステータスにする
+  end
 end

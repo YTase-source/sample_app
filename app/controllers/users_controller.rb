@@ -14,7 +14,9 @@ class UsersController < ApplicationController
     if @user.save
       # 保存の成功をここで扱う。
       # redirect_to @user
-      flash[:success] = "Welcome to the Sample App!"
+      reset_session
+      log_in @user
+      flash[:success] = 'Welcome to the Sample App!'
       redirect_to user_url(@user)
     else
       render 'new', status: :unprocessable_entity
@@ -23,8 +25,8 @@ class UsersController < ApplicationController
 
   private
 
-    def user_params
-      params.require(:user).permit(:name, :email, :password,
-                                   :password_confirmation)
-    end
+  def user_params
+    params.require(:user).permit(:name, :email, :password,
+                                 :password_confirmation)
+  end
 end
