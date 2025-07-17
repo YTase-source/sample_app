@@ -1,4 +1,7 @@
 class User < ApplicationRecord
+  # 記憶トークン用のローカル変数
+  attr_accessor :remember_token
+
   # save前に小文字に変換する
   # before_save { self.email = email.downcase }
   before_save { email.downcase! }
@@ -20,5 +23,17 @@ class User < ApplicationRecord
              BCrypt::Engine.cost
            end
     BCrypt::Password.create(string, cost: cost)
+  end
+
+  # ランダムなトークンを返す
+  def self.new_token
+    SecureRandom.urlsafe_base64
+  end
+
+  # 永続的セッションのためにユーザーをデータベースに記憶する
+  def remember
+    self.remember_token = User.new_token
+    # remember_tokenをさらに暗号化(:remember_digest)
+    update_attribute(:remember_digest, User.digest(remember_token))
   end
 end
