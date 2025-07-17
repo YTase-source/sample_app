@@ -7,7 +7,7 @@ class SessionsController < ApplicationController
       reset_session # ログインの直前に必ずこれを書くこと
       log_in user
       redirect_to user
-      debugger
+      # debugger
     else
       # エラーメッセージを作成する
       flash.now[:danger] = 'Invalid email/password combination' # 本当は正しくない
