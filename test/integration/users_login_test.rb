@@ -1,19 +1,24 @@
 require 'test_helper'
 
-class UsersLoginTest < ActionDispatch::IntegrationTest
-  # test "the truth" do
-  #   assert true
-  # end
-
+class UsersLogin < ActionDispatch::IntegrationTest
   # fixtureの取得
   def setup
     @user = users(:michael)
   end
+end
 
-  # emailは有効だが、passwordが無効な情報をPOSTした際の挙動確認
-  test 'login with valid email/invalid password' do
+# -------------------------------------------------------
+# 無効なログイン認証をPOSTした際のテスト
+# -------------------------------------------------------
+class InvalidPasswordTest < UsersLogin
+  # ログイン画面が開けるかのテスト
+  test 'login pass' do
     get login_path
     assert_template 'sessions/new'
+  end
+
+  # emailは有効だが、passwordが無効な情報をPOSTした際のテスト
+  test 'login with valid email/invalid password' do
     post login_path, params: { session: { email: @user.email,
                                           password: 'invalid' } }
     assert_not is_logged_in?
@@ -23,34 +28,29 @@ class UsersLoginTest < ActionDispatch::IntegrationTest
     get root_path
     assert flash.empty?
   end
+end
 
-  # 無効なログイン情報をPOSTした際の挙動確認
-  test 'login with invalid information' do
-    # ログイン用のパスを開く
-    get login_path
-    # 新しいセッションのフォームが正しく表示されたことを確認する
-    assert_template 'sessions/new'
-    # わざと無効なparamsハッシュを使ってセッション用パスにPOSTする
-    post login_path, params: { session: { email: '', password: '' } }
-    # 新しいセッションのフォームが正しいステータスを返し、再度表示されることを確認する
-    assert_response :unprocessable_entity
-    assert_template 'sessions/new'
-    # フラッシュメッセージが表示されることを確認する
-    assert_not flash.empty?
-    # 別のページ（Homeページなど） にいったん移動する
-    get root_path
-    # 移動先のページでフラッシュメッセージが表示されていないことを確認する
-    assert flash.empty?
-  end
-
-  # 有効なログイン情報をPOSTした際の挙動確認
-  test 'login with valid information' do
+# -------------------------------------------------------
+# 有効なログイン認証をPOSTした際のテスト
+# -------------------------------------------------------
+class ValidLogin < UsersLogin
+  def setup
+    super
     # paramsハッシュを使ってセッション用パスにPOSTする
-    post login_path, params: { session: { email: @user.email,
-                                          password: 'password' } }
+    post login_path, params: { session: { email: @user.email, password: 'password' } }
+  end
+end
+
+class ValidLoginTest < ValidLogin
+  # セッションにログイン情報があるかのテスト
+  test 'valid login' do
     assert is_logged_in?
     # リダイレクト先が正しいかチェック
     assert_redirected_to @user
+  end
+
+  # ログイン後、ユーザー画面にリダイレクトできるかのテスト
+  test 'redirect after login' do
     # リダイレクトを実行
     follow_redirect!
     # 移動先のページが正しいか確認
@@ -59,13 +59,32 @@ class UsersLoginTest < ActionDispatch::IntegrationTest
     assert_select 'a[href=?]', login_path, count: 0
     assert_select 'a[href=?]', logout_path
     assert_select 'a[href=?]', user_path(@user)
+  end
+end
+
+# -------------------------------------------------------
+# ログアウトした際のテスト
+# -------------------------------------------------------
+class Logout < ValidLogin
+  def setup
+    super
     # destroyアクションへリクエストを送る
     delete logout_path
+  end
+end
+
+class LogoutTest < Logout
+  # ログアウトが実行できるかのテスト
+  test 'successful logout' do
     # ログアウトしているか確認
     assert_not is_logged_in?
-    # Home画面にリダイレクトできるか確認
+    # リダイレクトできるか確認
     assert_response :see_other
     assert_redirected_to root_url
+  end
+
+  # ログアウト後、Home画面にリダイレクトできるかのテスト
+  test 'redirect after logout' do
     # リダイレクトを実行
     follow_redirect!
     # ログイン後のリンクがなくなり、ログイン前のリンクが表示されているか確認
