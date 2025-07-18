@@ -15,19 +15,23 @@ class User < ApplicationRecord
 
   validates :password, presence: true, length: { minimum: 8 }
 
-  # 渡された文字列のハッシュ値を返す
-  def self.digest(string)
-    cost = if ActiveModel::SecurePassword.min_cost
-             BCrypt::Engine::MIN_COST
-           else
-             BCrypt::Engine.cost
-           end
-    BCrypt::Password.create(string, cost: cost)
-  end
+  class << self
+    # 渡された文字列のハッシュ値を返す
+    # def self.digest(string)
+    def digest(string)
+      cost = if ActiveModel::SecurePassword.min_cost
+               BCrypt::Engine::MIN_COST
+             else
+               BCrypt::Engine.cost
+             end
+      BCrypt::Password.create(string, cost: cost)
+    end
 
-  # ランダムなトークンを返す
-  def self.new_token
-    SecureRandom.urlsafe_base64
+    # ランダムなトークンを返す
+    # def self.new_token
+    def new_token
+      SecureRandom.urlsafe_base64
+    end
   end
 
   # 永続的セッションのためにユーザーをデータベースに記憶する
