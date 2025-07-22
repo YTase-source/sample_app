@@ -5,6 +5,30 @@ class UsersLogin < ActionDispatch::IntegrationTest
   def setup
     @user = users(:michael)
   end
+
+  # 複数ウィンドウでログインしている状態からそれぞれログアウトした場合のテスト
+  test 'login with valid information followed by logout' do
+    post login_path, params: { session: { email: @user.email,
+                                          password: 'password' } }
+    assert is_logged_in?
+    assert_redirected_to @user
+    follow_redirect!
+    assert_template 'users/show'
+    assert_select 'a[href=?]', login_path, count: 0
+    assert_select 'a[href=?]', logout_path
+    assert_select 'a[href=?]', user_path(@user)
+    # 1番目のウィンドウでログアウトをクリックするユーザーをシミュレートする
+    delete logout_path
+    assert_response :see_other
+    assert_not is_logged_in?
+    assert_redirected_to root_url
+    # 2番目のウィンドウでログアウトをクリックするユーザーをシミュレートする
+    delete logout_path
+    follow_redirect!
+    assert_select 'a[href=?]', login_path
+    assert_select 'a[href=?]', logout_path,      count: 0
+    assert_select 'a[href=?]', user_path(@user), count: 0
+  end
 end
 
 # -------------------------------------------------------
@@ -91,5 +115,11 @@ class LogoutTest < Logout
     assert_select 'a[href=?]', login_path
     assert_select 'a[href=?]', logout_path,      count: 0
     assert_select 'a[href=?]', user_path(@user), count: 0
+  end
+
+  # test "login with valid information followed by logout" の別バージョン
+  test 'should still work after logout in second window' do
+    delete logout_path
+    assert_redirected_to root_url
   end
 end
