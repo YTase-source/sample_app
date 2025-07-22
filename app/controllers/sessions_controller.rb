@@ -16,11 +16,11 @@ class SessionsController < ApplicationController
     end
   end
 
-  # 現在のユーザーをログアウトする
-  def log_out
-    reset_session
-    @current_user = nil # 安全のため
-  end
+  # # 現在のユーザーをログアウトする（ヘルパーメソッドに移動しました）
+  # def log_out
+  #   reset_session
+  #   @current_user = nil # 安全のため
+  # end
 
   def destroy
     log_out
