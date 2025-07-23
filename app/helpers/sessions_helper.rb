@@ -17,8 +17,9 @@ module SessionsHelper
     # セッションユーザーIDがある場合
     if (user_id = session[:user_id])
       @current_user ||= User.find_by(id: user_id)
-    # 永続的セッションがあれ場合
+    # 永続的セッションがある場合
     elsif (user_id = cookies.encrypted[:user_id])
+      # raise # テストがパスすれば、この部分がテストされていないことがわかる
       user = User.find_by(id: user_id)
       if user && user.authenticated?(cookies[:remember_token])
         log_in user
