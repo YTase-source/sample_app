@@ -128,6 +128,7 @@ class RememberingTest < UsersLogin
   # remember_meチェックボックスが有効の場合のテスト
   test 'login with remembering' do
     log_in_as(@user, remember_me: '1')
+    assert_equal cookies[:remember_token], assigns(:user).remember_token
     assert_not cookies[:remember_token].blank?
   end
 
