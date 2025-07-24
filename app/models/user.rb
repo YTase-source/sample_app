@@ -13,7 +13,7 @@ class User < ApplicationRecord
   # ハッシュ化するメソッド
   has_secure_password
 
-  validates :password, presence: true, length: { minimum: 8 }
+  validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
 
   class << self
     # 渡された文字列のハッシュ値を返す
