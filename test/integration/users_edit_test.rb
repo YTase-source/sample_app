@@ -6,7 +6,10 @@ class UsersEditTest < ActionDispatch::IntegrationTest
   end
 
   test 'successful edit with friendly forwarding' do
-    get edit_user_path(@user)
+    get edit_user_path(@user) # ログイン前のため、フレンドリーフォワーディングを行う
+    assert_equal edit_user_url(@user), session[:forwarding_url] # session[:forwarding_url]に格納されているかテスト
+
+    # 1回目のログイン（直前にリクエストしたURLにリダイレクト）
     log_in_as(@user)
     assert_redirected_to edit_user_url(@user)
     name  = 'Foo Bar'
@@ -20,6 +23,10 @@ class UsersEditTest < ActionDispatch::IntegrationTest
     @user.reload
     assert_equal name,  @user.name
     assert_equal email, @user.email
+
+    # 2回目のログイン（デフォルトのプロフィール画面にリダイレクト）
+    log_in_as(@user)
+    assert_redirected_to user_url(@user)
   end
 
   test 'unsuccessful edit' do
