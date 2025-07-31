@@ -36,7 +36,7 @@ end
 # -------------------------------------------------------
 class InvalidPasswordTest < UsersLogin
   # ログイン画面が開けるかのテスト
-  test 'login pass' do
+  test 'login path' do
     get login_path
     assert_template 'sessions/new'
   end
