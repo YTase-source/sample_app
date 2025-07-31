@@ -50,11 +50,11 @@ class User < ApplicationRecord
   end
 
   # 渡されたトークンがダイジェストと一致したらtrueを返す
-  def authenticated?(remember_token)
-    # 渡されたトークンがnilの場合は早期終了させる
-    return false if remember_digest.nil?
+  def authenticated?(attribute, token)
+    digest = send("#{attribute}_digest") # データベース内の対応するダイジェストを代入（メタプログラミング）
+    return false if digest.nil?
 
-    BCrypt::Password.new(remember_digest).is_password?(remember_token)
+    BCrypt::Password.new(digest).is_password?(token) # 渡されたトークンをハッシュ化して比較
   end
 
   # ユーザーのログイン情報を破棄する
