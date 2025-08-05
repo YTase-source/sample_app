@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  has_many :microposts
+  has_many :microposts, dependent: :destroy
 
   # 記憶トークン用のローカル変数
   attr_accessor :remember_token, :activation_token, :reset_token
