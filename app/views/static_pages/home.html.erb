@@ -1,5 +1,9 @@
 <% if logged_in? %>
-  <%= render 'login_home' %>
+  <%= render 'static_pages/login_home' %>
+  <div class="col-md-8">
+    <h3>Micropost Feed</h3>
+    <%= render 'shared/feed' %>
+  </div>
 <% else %>
-  <%= render 'logout_home' %>
+  <%= render 'static_page/logout_home' %>
 <% end %>
