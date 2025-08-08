@@ -100,10 +100,15 @@ class User < ApplicationRecord
 
   # ユーザーのステータスフィードを返す
   def feed
-    Micropost.where('user_id IN (?) OR user_id = ?', following_ids, id)
-    # Micropost.where('user_id IN (?)', following_ids)
-    # Micropost.where('user_id = ?', id)
-    # Micropost.where.not('user_id IN (?) OR user_id = ?', following_ids, id)
+    # following_idsの取得を同一クエリで行うことで高速化
+    following_ids = "SELECT followed_id FROM relationships
+                     WHERE  follower_id = :user_id"
+    Micropost.where("user_id IN (#{following_ids})
+                     OR user_id = :user_id", user_id: id)
+                      # 事前に関連データを取得する
+                     .includes(:user, image_attachment: :blob) 
+    # Micropost.where("user_id IN (:following_ids) OR user_id = :user_id",
+    #  following_ids: following_ids, user_id: id)
   end
 
   # ユーザーをフォローする
