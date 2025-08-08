@@ -100,13 +100,18 @@ class User < ApplicationRecord
 
   # ユーザーのステータスフィードを返す
   def feed
-    # following_idsの取得を同一クエリで行うことで高速化
-    following_ids = "SELECT followed_id FROM relationships
-                     WHERE  follower_id = :user_id"
-    Micropost.where("user_id IN (#{following_ids})
-                     OR user_id = :user_id", user_id: id)
-                      # 事前に関連データを取得する
-                     .includes(:user, image_attachment: :blob) 
+    part_of_feed = "relationships.follower_id = :id or microposts.user_id = :id"
+    Micropost.left_outer_joins(user: :followers)
+             # distinctはSQLのクエリに作用する
+             .where(part_of_feed, { id: id }).distinct
+             .includes(:user, image_attachment: :blob)
+    # # following_idsの取得を同一クエリで行うことで高速化
+    # following_ids = "SELECT followed_id FROM relationships
+    #                  WHERE  follower_id = :user_id"
+    # Micropost.where("user_id IN (#{following_ids})
+    #                  OR user_id = :user_id", user_id: id)
+    #                   # 事前に関連データを取得する
+    #                  .includes(:user, image_attachment: :blob) 
     # Micropost.where("user_id IN (:following_ids) OR user_id = :user_id",
     #  following_ids: following_ids, user_id: id)
   end
