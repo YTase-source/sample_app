@@ -1,5 +1,13 @@
 class User < ApplicationRecord
   has_many :microposts, dependent: :destroy
+  has_many :active_relationships, class_name: 'Relationship',
+                                  foreign_key: 'follower_id',
+                                  dependent: :destroy
+  has_many :passive_relationships, class_name: 'Relationship',
+                                   foreign_key: 'followed_id',
+                                   dependent: :destroy
+  has_many :following, through: :active_relationships, source: :followed # フォローしているユーザー
+  has_many :followers, through: :passive_relationships, source: :follower # フォローされているユーザー
 
   # 記憶トークン用のローカル変数
   attr_accessor :remember_token, :activation_token, :reset_token
@@ -53,7 +61,7 @@ class User < ApplicationRecord
 
   # 渡されたトークンがダイジェストと一致したらtrueを返す
   def authenticated?(attribute, token)
-    digest = send("#{attribute}_digest") # データベース内の対応するダイジェストを代入（メタプログラミング）
+    digest = send(:"#{attribute}_digest") # データベース内の対応するダイジェストを代入（メタプログラミング）
     return false if digest.nil?
 
     BCrypt::Password.new(digest).is_password?(token) # 渡されたトークンをハッシュ化して比較
@@ -90,10 +98,37 @@ class User < ApplicationRecord
     reset_sent_at < 2.hours.ago
   end
 
-  # 試作feedの定義
-  # 完全な実装は次章の「ユーザーをフォローする」を参照
+  # ユーザーのステータスフィードを返す
   def feed
-    Micropost.where('user_id = ?', id)
+    part_of_feed = "relationships.follower_id = :id or microposts.user_id = :id"
+    Micropost.left_outer_joins(user: :followers)
+             # distinctはSQLのクエリに作用する
+             .where(part_of_feed, { id: id }).distinct
+             .includes(:user, image_attachment: :blob)
+    # # following_idsの取得を同一クエリで行うことで高速化
+    # following_ids = "SELECT followed_id FROM relationships
+    #                  WHERE  follower_id = :user_id"
+    # Micropost.where("user_id IN (#{following_ids})
+    #                  OR user_id = :user_id", user_id: id)
+    #                   # 事前に関連データを取得する
+    #                  .includes(:user, image_attachment: :blob) 
+    # Micropost.where("user_id IN (:following_ids) OR user_id = :user_id",
+    #  following_ids: following_ids, user_id: id)
+  end
+
+  # ユーザーをフォローする
+  def follow(other_user)
+    following << other_user unless self == other_user
+  end
+
+  # ユーザーをフォロー解除する
+  def unfollow(other_user)
+    following.delete(other_user)
+  end
+
+  # 現在のユーザーが他のユーザーをフォローしていればtrueを返す
+  def following?(other_user)
+    following.include?(other_user)
   end
 
   private

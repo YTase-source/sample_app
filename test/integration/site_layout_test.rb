@@ -51,4 +51,18 @@ class SiteLayoutTest < ActionDispatch::IntegrationTest
     assert check_header_link
     assert check_footer_link
   end
+
+  test 'home page display when logged in' do
+    log_in_as(@user)
+    get root_path
+    assert_template 'static_pages/home'
+    # statsパーシャルの情報を確認
+    assert_select '.stats' do
+      assert_select 'a[href=?]', following_user_path(@user)
+      assert_select 'a[href=?]', followers_user_path(@user)
+      assert_match @user.following.count.to_s, response.body
+      assert_match @user.followers.count.to_s, response.body
+      assert_select 'strong.stat', count: 2
+    end
+  end
 end
