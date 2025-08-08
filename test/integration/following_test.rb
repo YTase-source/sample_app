@@ -32,6 +32,7 @@ end
 
 class FollowTest < Following
   test 'should follow a user the standard way' do
+    # フォローが1増えることを確認
     assert_difference '@user.following.count', 1 do
       post relationships_path, params: { followed_id: @other.id }
     end
