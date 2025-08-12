@@ -1,0 +1,36 @@
+# versionキーの記載は非推奨（省略可）
+
+# コンテナの定義
+services:
+  # データベースサービスの定義（例としてPostgreSQLを使用）
+  db:
+    container_name: sample-app-db-docker
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=sample_app_db
+    # 名前付きボリュームをコンテナ内にマウント
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  # Webアプリケーションサービスの定義（Rails)
+  web:
+    container_name: sample-app-web-docker
+    # カレントディレクトリのDockerfileからイメージをビルド
+    build: .
+    # Railsサーバーがポート番号:3000でリッスン
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    # ローカルファイルをコンテナ内にマウント
+    volumes:
+      - .:/sample-app
+    # ホストの3000番ポート → コンテナの3000番ポート にマッピング
+    ports:
+      - "3000:3000"
+    # dbコンテナが起動してからwebコンテナを起動
+    depends_on:
+      - db
+      
+# データ永続化のための名前付きボリュームを定義
+volumes:
+  db-data:
+    driver: local
